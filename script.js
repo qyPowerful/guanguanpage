@@ -1,6 +1,3 @@
-// 保存模型预测函数的引用
-const modelPredict = window.predict;
-
 // 所有函数定义移到最前面
 // 辅助函数：更新进度指示器
 function updateProgressIndicator(step) {
@@ -157,9 +154,9 @@ async function handleSubmit() {
             throw new Error(`输入数组长度错误: ${inputArray.length}, 应为12`);
         }
 
-        // 使用保存的modelPredict函数进行预测
+        // 直接使用window.predict进行预测
         console.log('调用模型进行预测...');
-        const probability = modelPredict(inputArray);
+        const probability = window.predict(inputArray);
         console.log('预测结果:', probability);
 
         // 验证预测结果
