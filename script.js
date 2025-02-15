@@ -76,7 +76,10 @@ function collectInputs() {
     const inputs = {};
     const elements = document.querySelectorAll('select');
     elements.forEach(element => {
-        inputs[element.id] = element.value;
+        // 将id转换为对应的特征名（首字母大写）
+        const featureId = element.id;
+        const featureName = featureId.charAt(0).toUpperCase() + featureId.slice(1);
+        inputs[featureName] = element.value;
     });
     console.log('收集到的原始输入:', inputs);
 
@@ -88,7 +91,7 @@ function collectInputs() {
         }
         
         // 获取该特征的映射值
-        const featureMapping = mappings[feature];
+        const featureMapping = mappings.mappings[feature];
         if (!featureMapping) {
             throw new Error(`特征 ${feature} 未找到对应的映射`);
         }
