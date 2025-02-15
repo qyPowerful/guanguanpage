@@ -1,113 +1,25 @@
-// 全局变量
-let mappings = null;  // 将由index.html中的fetch加载
+// 使用window对象存储mappings
+window.mappings = null;
 
-// 辅助函数：检查所有必填字段
-function validateInputs() {
-    const requiredFields = [
-        'age_rank', 'sex', 'education', 'race',
-        'activities', 'dairy', 'fruit', 'smoke',
-        'hearing', 'tinnitus', 'tg', 'cho'
-    ];
-    
-    for (const field of requiredFields) {
-        const value = document.getElementById(field).value;
-        if (!value) {
-            alert('请填写所有必填项');
-            document.getElementById(field).focus();
-            return false;
-        }
-    }
-    return true;
-}
-
-// 辅助函数：收集并转换输入数据
-function collectInputs() {
-    if (!mappings || !mappings.feature_order) {
-        throw new Error('映射数据未正确加载');
-    }
-
-    // 创建一个对象来存储所有输入值
-    const inputs = {};
-    const elements = document.querySelectorAll('select');
-    elements.forEach(element => {
-        inputs[element.id] = element.value;
-    });
-
-    // 根据feature_order创建输入数组
-    const inputArray = mappings.feature_order.map(feature => {
-        const value = inputs[feature];
-        if (value === undefined) {
-            throw new Error(`特征 ${feature} 未找到对应的输入值`);
-        }
-        
-        // 获取该特征的映射值
-        const featureMapping = mappings[feature];
-        if (!featureMapping) {
-            throw new Error(`特征 ${feature} 未找到对应的映射`);
-        }
-
-        // 返回映射后的标准化值
-        return featureMapping[value];
-    });
-
-    return inputArray;
-}
-
-// 辅助函数：更新进度指示器
-function updateProgressIndicator(step) {
-    document.querySelectorAll('.step-number').forEach((element, index) => {
-        if (index + 1 <= step) {
-            element.classList.add('active');
-        } else {
-            element.classList.remove('active');
-        }
-    });
-}
-
-// 辅助函数：更新结果显示
-function updateResults(probability) {
-    const percentage = (probability * 100).toFixed(1);
-    
-    // 更新风险值显示
-    document.getElementById('risk-value').textContent = percentage + '%';
-    document.getElementById('risk-percentage').textContent = percentage + '%';
-    
-    // 显示结果容器
-    const resultContainer = document.getElementById('result');
-    resultContainer.classList.add('show');
-    
-    // 平滑滚动到结果区域
-    resultContainer.scrollIntoView({ behavior: 'smooth' });
-}
-
-// 主预测函数
-async function predict() {
-    try {
-        // 验证输入
-        if (!validateInputs()) {
-            return;
-        }
-
-        // 更新进度指示器
-        updateProgressIndicator(3);
-
-        // 收集并转换输入数据
-        const inputArray = collectInputs();
-
-        // 调用模型进行预测
-        const probability = window.predict(inputArray);
-
-        // 更新结果显示
-        updateResults(probability);
-
-    } catch (error) {
-        console.error('预测过程出错:', error);
-        alert('预测过程出现错误: ' + error.message);
-    }
-}
-
-// 页面加载完成后的初始化
+// 初始化：加载mappings数据
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('开始加载mappings数据...');
+    fetch('mappings.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            window.mappings = data;
+            console.log('Mappings加载成功:', data);
+        })
+        .catch(error => {
+            console.error('Mappings加载失败:', error);
+            alert('数据加载失败，请刷新页面重试');
+        });
+
     // 为所有select添加change事件监听器
     document.querySelectorAll('select').forEach(select => {
         select.addEventListener('change', function() {
@@ -125,3 +37,156 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// 辅助函数：检查所有必填字段
+function validateInputs() {
+    console.log('验证输入字段...');
+    const requiredFields = [
+        'age_rank', 'sex', 'education', 'race',
+        'activities', 'dairy', 'fruit', 'smoke',
+        'hearing', 'tinnitus', 'tg', 'cho'
+    ];
+    
+    for (const field of requiredFields) {
+        const element = document.getElementById(field);
+        if (!element) {
+            console.error(`字段 ${field} 未找到`);
+            return false;
+        }
+        const value = element.value;
+        if (!value) {
+            alert('请填写所有必填项');
+            element.focus();
+            console.log(`字段 ${field} 未填写`);
+            return false;
+        }
+    }
+    console.log('所有字段验证通过');
+    return true;
+}
+
+// 辅助函数：收集并转换输入数据
+function collectInputs() {
+    console.log('开始收集输入数据...');
+    if (!window.mappings || !window.mappings.feature_order) {
+        throw new Error('映射数据未正确加载');
+    }
+
+    // 创建一个对象来存储所有输入值
+    const inputs = {};
+    const elements = document.querySelectorAll('select');
+    elements.forEach(element => {
+        inputs[element.id] = element.value;
+    });
+    console.log('收集到的原始输入:', inputs);
+
+    // 根据feature_order创建输入数组
+    const inputArray = window.mappings.feature_order.map(feature => {
+        const value = inputs[feature];
+        if (value === undefined) {
+            throw new Error(`特征 ${feature} 未找到对应的输入值`);
+        }
+        
+        // 获取该特征的映射值
+        const featureMapping = window.mappings[feature];
+        if (!featureMapping) {
+            throw new Error(`特征 ${feature} 未找到对应的映射`);
+        }
+
+        // 返回映射后的标准化值
+        const mappedValue = featureMapping[value];
+        if (mappedValue === undefined) {
+            throw new Error(`特征 ${feature} 的值 ${value} 未找到对应的映射值`);
+        }
+
+        return mappedValue;
+    });
+
+    console.log('转换后的输入数组:', inputArray);
+    return inputArray;
+}
+
+// 辅助函数：更新进度指示器
+function updateProgressIndicator(step) {
+    console.log('更新进度指示器:', step);
+    document.querySelectorAll('.step-number').forEach((element, index) => {
+        if (index + 1 <= step) {
+            element.classList.add('active');
+        } else {
+            element.classList.remove('active');
+        }
+    });
+}
+
+// 辅助函数：更新结果显示
+function updateResults(probability) {
+    console.log('更新预测结果:', probability);
+    const percentage = (probability * 100).toFixed(1);
+    
+    // 更新风险值显示
+    document.getElementById('risk-value').textContent = percentage + '%';
+    document.getElementById('risk-percentage').textContent = percentage + '%';
+    
+    // 显示结果容器
+    const resultContainer = document.getElementById('result');
+    resultContainer.classList.add('show');
+    
+    // 平滑滚动到结果区域
+    resultContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 主预测函数
+async function predict() {
+    console.log('开始预测流程...');
+    try {
+        // 检查mappings是否已加载
+        if (!window.mappings) {
+            throw new Error('数据未加载完成，请刷新页面重试');
+        }
+
+        // 验证输入
+        if (!validateInputs()) {
+            return;
+        }
+
+        // 更新进度指示器
+        updateProgressIndicator(3);
+
+        // 收集并转换输入数据
+        const inputArray = collectInputs();
+        
+        // 验证输入数组
+        if (!Array.isArray(inputArray)) {
+            throw new Error('输入数据格式错误');
+        }
+        if (inputArray.length !== 12) {
+            throw new Error(`输入数组长度错误: ${inputArray.length}, 应为12`);
+        }
+        
+        // 验证window.predict是否存在
+        if (typeof window.predict !== 'function') {
+            throw new Error('预测模型未正确加载');
+        }
+
+        // 调用模型进行预测
+        console.log('调用模型进行预测...');
+        const probability = window.predict(inputArray);
+        console.log('预测结果:', probability);
+
+        // 验证预测结果
+        if (typeof probability !== 'number' || isNaN(probability)) {
+            throw new Error('预测结果无效');
+        }
+
+        // 更新结果显示
+        updateResults(probability);
+
+    } catch (error) {
+        console.error('预测过程出错:', error);
+        alert('预测过程出现错误: ' + error.message);
+    }
+}
+
+// 导出必要的函数
+window.predict = predict;
+window.updateProgressIndicator = updateProgressIndicator;
