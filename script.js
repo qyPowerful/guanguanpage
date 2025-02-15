@@ -227,6 +227,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 导出必要的函数
-window.predict = predict;
+// 只导出进度条更新函数
 window.updateProgressIndicator = updateProgressIndicator;
