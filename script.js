@@ -1,3 +1,6 @@
+// 保存原始predict函数的引用
+let originalPredict = null;
+
 // 所有函数定义移到最前面
 // 辅助函数：更新进度指示器
 function updateProgressIndicator(step) {
@@ -121,8 +124,8 @@ function updateResults(probability) {
     resultContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 主预测函数
-async function handleSubmit() {
+// 重新定义predict函数
+window.predict = function() {
     console.log('开始预测流程...');
     try {
         // 检查数据是否正在加载
@@ -154,9 +157,9 @@ async function handleSubmit() {
             throw new Error(`输入数组长度错误: ${inputArray.length}, 应为12`);
         }
 
-        // 直接使用window.predict进行预测
+        // 调用原始predict函数进行预测
         console.log('调用模型进行预测...');
-        const probability = window.predict(inputArray);
+        const probability = originalPredict(inputArray);
         console.log('预测结果:', probability);
 
         // 验证预测结果
@@ -176,6 +179,17 @@ async function handleSubmit() {
 // 初始化：加载mappings数据
 document.addEventListener('DOMContentLoaded', function() {
     console.log('开始加载mappings数据...');
+    
+    // 保存原始predict函数
+    if (typeof window.predict === 'function') {
+        originalPredict = window.predict;
+        console.log('原始predict函数已保存');
+    } else {
+        console.error('原始predict函数未找到');
+        alert('模型加载失败，请刷新页面重试');
+        return;
+    }
+
     // 禁用提交按钮
     const submitBtn = document.querySelector('.submit-btn');
     if (submitBtn) {
@@ -221,6 +235,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 导出函数到window对象
-window.handleSubmit = handleSubmit;
+// 导出更新进度指示器函数
 window.updateProgressIndicator = updateProgressIndicator;
