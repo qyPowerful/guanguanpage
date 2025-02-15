@@ -1,5 +1,5 @@
-// 使用window对象存储mappings
-window.mappings = null;
+// 使用局部变量存储mappings
+let mappings = null;
 
 // 初始化：加载mappings数据
 document.addEventListener('DOMContentLoaded', function() {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            window.mappings = data;
+            mappings = data;
             console.log('Mappings加载成功:', data);
         })
         .catch(error => {
@@ -68,7 +68,7 @@ function validateInputs() {
 // 辅助函数：收集并转换输入数据
 function collectInputs() {
     console.log('开始收集输入数据...');
-    if (!window.mappings || !window.mappings.feature_order) {
+    if (!mappings || !mappings.feature_order) {
         throw new Error('映射数据未正确加载');
     }
 
@@ -81,14 +81,14 @@ function collectInputs() {
     console.log('收集到的原始输入:', inputs);
 
     // 根据feature_order创建输入数组
-    const inputArray = window.mappings.feature_order.map(feature => {
+    const inputArray = mappings.feature_order.map(feature => {
         const value = inputs[feature];
         if (value === undefined) {
             throw new Error(`特征 ${feature} 未找到对应的输入值`);
         }
         
         // 获取该特征的映射值
-        const featureMapping = window.mappings[feature];
+        const featureMapping = mappings[feature];
         if (!featureMapping) {
             throw new Error(`特征 ${feature} 未找到对应的映射`);
         }
@@ -140,7 +140,7 @@ async function predict() {
     console.log('开始预测流程...');
     try {
         // 检查mappings是否已加载
-        if (!window.mappings) {
+        if (!mappings) {
             throw new Error('数据未加载完成，请刷新页面重试');
         }
 
