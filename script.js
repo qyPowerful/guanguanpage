@@ -1,5 +1,19 @@
+// 所有函数定义移到最前面
+// 辅助函数：更新进度指示器
+function updateProgressIndicator(step) {
+    console.log('更新进度指示器:', step);
+    document.querySelectorAll('.step-number').forEach((element, index) => {
+        if (index + 1 <= step) {
+            element.classList.add('active');
+        } else {
+            element.classList.remove('active');
+        }
+    });
+}
+
 // 使用局部变量存储mappings
 let mappings = null;
+let isLoading = true; // 添加加载状态标志
 
 // ID到特征名的映射
 const idToFeature = {
@@ -16,43 +30,6 @@ const idToFeature = {
     'smoke': 'Smoke',
     'fruit': 'Fruit'
 };
-
-// 初始化：加载mappings数据
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('开始加载mappings数据...');
-    fetch('mappings.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            mappings = data;
-            console.log('Mappings加载成功:', data);
-        })
-        .catch(error => {
-            console.error('Mappings加载失败:', error);
-            alert('数据加载失败，请刷新页面重试');
-        });
-
-    // 为所有select添加change事件监听器
-    document.querySelectorAll('select').forEach(select => {
-        select.addEventListener('change', function() {
-            // 当用户开始填写表单时，激活第一个进度点
-            updateProgressIndicator(1);
-            
-            // 如果第一部分的所有字段都已填写，激活第二个进度点
-            const firstSection = ['age_rank', 'sex', 'education', 'race'];
-            const firstSectionComplete = firstSection.every(id => 
-                document.getElementById(id).value !== ''
-            );
-            if (firstSectionComplete) {
-                updateProgressIndicator(2);
-            }
-        });
-    });
-});
 
 // 辅助函数：检查所有必填字段
 function validateInputs() {
@@ -127,18 +104,6 @@ function collectInputs() {
     return inputArray;
 }
 
-// 辅助函数：更新进度指示器
-function updateProgressIndicator(step) {
-    console.log('更新进度指示器:', step);
-    document.querySelectorAll('.step-number').forEach((element, index) => {
-        if (index + 1 <= step) {
-            element.classList.add('active');
-        } else {
-            element.classList.remove('active');
-        }
-    });
-}
-
 // 辅助函数：更新结果显示
 function updateResults(probability) {
     console.log('更新预测结果:', probability);
@@ -160,6 +125,11 @@ function updateResults(probability) {
 async function predict() {
     console.log('开始预测流程...');
     try {
+        // 检查数据是否正在加载
+        if (isLoading) {
+            throw new Error('数据正在加载中，请稍候...');
+        }
+        
         // 检查mappings是否已加载
         if (!mappings) {
             throw new Error('数据未加载完成，请刷新页面重试');
@@ -208,6 +178,54 @@ async function predict() {
         alert('预测过程出现错误: ' + error.message);
     }
 }
+
+// 初始化：加载mappings数据
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('开始加载mappings数据...');
+    // 禁用提交按钮
+    const submitBtn = document.querySelector('.submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+    }
+
+    fetch('mappings.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            mappings = data;
+            isLoading = false;
+            console.log('Mappings加载成功:', data);
+            // 启用提交按钮
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Mappings加载失败:', error);
+            alert('数据加载失败，请刷新页面重试');
+        });
+
+    // 为所有select添加change事件监听器
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+            // 当用户开始填写表单时，激活第一个进度点
+            updateProgressIndicator(1);
+            
+            // 如果第一部分的所有字段都已填写，激活第二个进度点
+            const firstSection = ['age_rank', 'sex', 'education', 'race'];
+            const firstSectionComplete = firstSection.every(id => 
+                document.getElementById(id).value !== ''
+            );
+            if (firstSectionComplete) {
+                updateProgressIndicator(2);
+            }
+        });
+    });
+});
 
 // 导出必要的函数
 window.predict = predict;
