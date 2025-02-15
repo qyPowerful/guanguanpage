@@ -1,6 +1,22 @@
 // 使用局部变量存储mappings
 let mappings = null;
 
+// ID到特征名的映射
+const idToFeature = {
+    'age_rank': 'Age_rank',
+    'sex': 'Sex',
+    'education': 'Education',
+    'race': 'Race',
+    'activities': 'Activities',
+    'hearing': 'Hearing',
+    'tg': 'TG',
+    'tinnitus': 'Tinnitus',
+    'cho': 'CHO',
+    'dairy': 'Dairy',
+    'smoke': 'Smoke',
+    'fruit': 'Fruit'
+};
+
 // 初始化：加载mappings数据
 document.addEventListener('DOMContentLoaded', function() {
     console.log('开始加载mappings数据...');
@@ -76,9 +92,11 @@ function collectInputs() {
     const inputs = {};
     const elements = document.querySelectorAll('select');
     elements.forEach(element => {
-        // 将id转换为对应的特征名（首字母大写）
         const featureId = element.id;
-        const featureName = featureId.charAt(0).toUpperCase() + featureId.slice(1);
+        const featureName = idToFeature[featureId];
+        if (!featureName) {
+            throw new Error(`未找到字段 ${featureId} 对应的特征名`);
+        }
         inputs[featureName] = element.value;
     });
     console.log('收集到的原始输入:', inputs);
