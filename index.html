@@ -203,12 +203,21 @@
             background: white;
             color: var(--text-primary);
             appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234A90E2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            cursor: pointer;
         }
 
         .form-control:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
             outline: none;
+        }
+
+        .form-control:hover {
+            border-color: var(--primary-light);
         }
 
         .hint {
@@ -293,6 +302,7 @@
             font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 10px;
+            animation: countUp 1s ease-out;
         }
 
         .risk-label {
@@ -391,6 +401,17 @@
             }
             50% {
                 transform: translateY(-10px);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -696,40 +717,20 @@
         </div>
     </div>
 
-    <!-- 先加载数据 -->
-    <script>
-        // 用于存储mappings数据的全局变量
-        let mappings = null;
-        
-        // 加载mappings.json
-        fetch('mappings.json')
-            .then(response => response.json())
-            .then(data => {
-                mappings = data;
-                console.log('Mappings loaded successfully');
-            })
-            .catch(error => {
-                console.error('Error loading mappings:', error);
-                alert('加载数据时出错，请刷新页面重试');
-            });
-    </script>
-
-    <!-- 加载模型和主要脚本 -->
+    <!-- 按顺序加载所需文件 -->
     <script src="model.js"></script>
     <script src="script.js"></script>
-
-    <!-- 基本检查脚本 -->
     <script>
-        // 检查必要文件是否加载
+        // 检查必要组件是否正确加载
         window.addEventListener('load', function() {
-            if (!mappings) {
-                console.error('Mappings not loaded');
-                alert('数据加载失败，请刷新页面重试');
-            }
-            if (typeof predict !== 'function') {
+            // 检查模型是否正确加载
+            if (typeof window.predict !== 'function') {
                 console.error('Model not loaded properly');
                 alert('模型加载失败，请刷新页面重试');
+                return;
             }
+            
+            console.log('所有组件加载完成');
         });
     </script>
 </body>
